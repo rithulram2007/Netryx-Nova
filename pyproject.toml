@@ -25,6 +25,7 @@ dependencies = [
     "python-multipart",
     "websockets",
     "faiss-cpu",
+    "python-dotenv",
 ]
 
 [tool.ruff]

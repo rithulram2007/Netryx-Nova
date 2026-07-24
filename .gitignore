@@ -1,4 +1,36 @@
-venv/
-.vscode
-netryx_data
+# Python
 __pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Runtime data
+netryx_data/
+*.netryx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+config.json
+*.token
+
+# Modal
+modal_token.json

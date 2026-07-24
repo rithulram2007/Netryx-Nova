@@ -102,7 +102,22 @@
 - Committed as: `feat(cloud): add Modal GPU worker and CloudModalEngine client`
 - **Next**: Phase 6 — Polish, Testing & Documentation
 
-## Session Checklist (End of Session)
-- [x] ROADMAP.md reflects current phase
-- [ ] No debugging artifacts left in codebase
-- [ ] If files were created, verified with lint/typecheck if applicable
+### Session 10 — 2026-07-24 (Phase 6: Polish, Testing & Documentation)
+- Created `tests/test_consensus.py` — 6 tests: empty, single, same-cell, panoid dedup, top_k, cluster scoring
+- Created `tests/test_retrieval.py` — 7 tests: FAISS/numpy load, cache, not-found, search results, dedup, radius filter
+- Created `tests/test_netryx_loader.py` — 5 tests: bundle extract, load index, missing, FAISS build + normalization (skipped if faiss unavailable)
+- Created `tests/test_tile_downloader.py` — 4 tests: tiles_info list, tuple fields, zoom level, grid size
+- Created `tests/test_pipeline.py` — integration test: load bundle → FAISS search → result field validation
+- Created `scripts/bench_retrieval.py` — benchmark: build + search latency across 1K/10K/50K/100K index sizes (QPS, entries/s)
+- Updated `pyproject.toml` — mypy override for tests.* (disallow_untyped_defs=false)
+- Verified: 21/23 tests pass (2 skipped: faiss not installed), `ruff` + `mypy` clean
+- **All 7 phases complete. Project scaffold is fully implemented.**
+
+### Session 11 — 2026-07-24 (GitHub Prep + .env Fix)
+- Updated `README.md` — full rewrite for Netryx Nova: modular architecture, web UI, engine backends, new project structure
+- Created `.gitignore` — Python, venv, IDE, runtime data, Modal secrets
+- Added `$30 Modal free credit` note to README
+- Fixed `.env` support: added `python-dotenv` dep, `load_dotenv()` in `app.py` before project imports
+- Created `.env.example` — documents available env vars
+- Set remote → `https://github.com/mangodxd/Netryx-Nova.git` and pushed
+- Repo published on GitHub

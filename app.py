@@ -1,7 +1,10 @@
 import logging
 from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request
+
+load_dotenv()
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
