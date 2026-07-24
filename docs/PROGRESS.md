@@ -92,6 +92,16 @@
   `docs/3-api/api-spec-template.md`, `docs/PROGRESS.md`
 - **Next**: Phase 5 — Cloud Deployment (Modal worker, CloudModalEngine)
 
+### Session 9 — 2026-07-24 (Phase 5: Cloud Deployment)
+- Created `modal_app/mast3r_worker.py` — Modal FastAPI ASGI entrypoint with T4 GPU, auto-detect MASt3R at deploy/runtime, `/match` endpoint (download tiles → stitch → crop → MASt3R), `/health` endpoint, local dev mode on :8001
+- Created `engines/cloud_modal.py` — `CloudModalEngine(EngineBase)`: HTTP client dispatching candidates to Modal worker with 3-retry exponential backoff, candidate loop with early exit, `match_collector` support, `available()` static check via env vars
+- Updated `engines/__init__.py` — `auto_detect_engine()` now falls through to CloudModalEngine when GPU unavailable and `MODAL_TOKEN_ID`/`SECRET` are set; explicit `"cloud"` mode supported
+- Updated `core/pipeline.py` — `set_engine("cloud")` instantiates `CloudModalEngine` directly
+- Updated `ui/templates/index.html` — added "Cloud GPU" to engine selector dropdown
+- Verified: `ruff` + `mypy` clean, CloudModalEngine import/instantiation OK
+- Committed as: `feat(cloud): add Modal GPU worker and CloudModalEngine client`
+- **Next**: Phase 6 — Polish, Testing & Documentation
+
 ## Session Checklist (End of Session)
 - [x] ROADMAP.md reflects current phase
 - [ ] No debugging artifacts left in codebase

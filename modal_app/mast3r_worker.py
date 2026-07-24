@@ -84,14 +84,14 @@ async def health() -> dict[str, str]:
 try:
     import modal
 
-    stub = modal.Stub("netryx-nova-worker")
+    app = modal.App("netryx-nova-worker")
     _MODAL_IMAGE = (
         modal.Image.debian_slim(python_version="3.11")
         .apt_install("git")
         .run_commands(
             "git clone --recursive https://github.com/naver/mast3r.git /mast3r",
         )
-        .pip_install(
+        .uv_pip_install(
             "torch>=2.0",
             "torchvision",
             "numpy",
@@ -108,20 +108,21 @@ try:
         )
     )
 
-    @stub.asgi(
+    @app.function(
         image=_MODAL_IMAGE,
         gpu="T4",
         timeout=600,
         container_idle_timeout=120,
         secrets=[modal.Secret.from_name("netryx-hf-token", required=False)],
     )
-    def app() -> FastAPI:
+    @modal.asgi_app()
+    def fastapi_app() -> FastAPI:
         _ensure_mast3r_imports()
         return web_app
 
 except ImportError:
     log.info("modal not installed — worker can only run locally")
-    stub = None
+    app = None
 
 
 def _ensure_mast3r_imports() -> None:
