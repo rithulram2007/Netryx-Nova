@@ -1,10 +1,12 @@
 import logging
+from pathlib import Path
 
-import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
-from config import HOST, PORT
+from ui.web_app import router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 log = logging.getLogger("netryx")
@@ -19,15 +21,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+templates = Jinja2Templates(directory=Path(__file__).parent / "ui" / "templates")
+app.mount("/static", StaticFiles(directory=Path(__file__).parent / "ui" / "static"), name="static")
 
-@app.on_event("startup")
-async def startup() -> None:
-    log.info("Netryx Astra V2 starting up")
+app.include_router(router)
 
 
-@app.on_event("shutdown")
-async def shutdown() -> None:
-    log.info("Netryx Astra V2 shutting down")
+@app.get("/")
+async def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.get("/health")
@@ -36,4 +38,8 @@ async def health() -> dict[str, str]:
 
 
 if __name__ == "__main__":
+    import uvicorn
+
+    from config import HOST, PORT
+
     uvicorn.run("app:app", host=HOST, port=PORT, reload=True)

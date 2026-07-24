@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Netryx Astra V2</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="topbar">
+      <h1>Netryx <span>Astra</span> V2</h1>
+      <span class="tagline">Image Geolocation</span>
+      <div class="engine-selector">
+        <label>Engine:</label>
+        <select id="engine-select">
+          <option value="auto">Auto</option>
+          <option value="gpu">Local GPU</option>
+          <option value="cpu">CPU</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="sidebar">
+        <div class="panel">
+          <div class="panel-title">Index</div>
+          <div class="upload-zone" id="upload-zone">
+            <div class="icon">&#128230;</div>
+            <div class="label">Drop .netryx bundle or click to upload</div>
+            <div class="hint">Community indexes from Hugging Face Hub</div>
+            <input type="file" id="upload-input" accept=".netryx" />
+          </div>
+          <div id="upload-status" class="upload-status"></div>
+          <div id="index-info" style="font-size:12px;color:var(--text-secondary);margin-top:8px;"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Community Hub</div>
+          <div id="hub-list" class="hub-list"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Search</div>
+          <div class="search-form">
+            <div class="form-row">
+              <input type="number" id="search-lat" placeholder="Latitude" step="any" value="0" />
+              <input type="number" id="search-lon" placeholder="Longitude" step="any" value="0" />
+            </div>
+            <div class="form-row">
+              <input type="number" id="search-radius" placeholder="Radius (km)" step="0.1" value="0.5" />
+            </div>
+            <div class="form-row">
+              <input type="file" id="search-image" accept="image/*" />
+            </div>
+            <button class="btn btn-primary btn-block" id="search-btn">Search</button>
+            <button class="btn btn-danger btn-block" id="cancel-btn" style="display:none;">Cancel</button>
+          </div>
+        </div>
+
+        <div class="progress-section">
+          <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar"></div></div>
+          <div class="progress-info">
+            <span id="progress-text"></span>
+            <span id="progress-count"></span>
+          </div>
+        </div>
+
+        <div class="panel" style="flex:1;overflow-y:auto;">
+          <div class="panel-title">Results</div>
+          <div id="results-list" class="results-list">
+            <div class="no-results">Upload an index and run a search</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="map-container">
+        <div id="map"></div>
+      </div>
+    </div>
+  </div>
+
+  <template id="result-template"></template>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/static/js/map.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
