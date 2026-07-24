@@ -9,7 +9,7 @@ You are an AI engineering agent working on **Netryx Astra V2 (Refactored / Hybri
 3. Never write code that is not specified in the PRD or an active feature task.
 4. Always verify your work: run lint, type checks, and the specific test command for the module you edited.
 5. Update `docs/PROGRESS.md` at the end of every session with status changes and blockers.
-6. Follow AIOS constitutional laws for engineering decisions, style, and anti-patterns.
+6. Follow `AI_GLOBAL_RULES.md` constitutional laws for engineering decisions, style, and anti-patterns.
 
 ## Document Router Table
 

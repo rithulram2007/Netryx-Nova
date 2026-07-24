@@ -56,6 +56,7 @@ class LocalGPUEngine(EngineBase):
         early_exit_threshold: int = 450,
         cancel_event: threading.Event | None = None,
         progress_callback: Callable | None = None,
+        match_collector: list | None = None,
     ) -> dict:
         mast3r = get_lazy_mast3r(self._device)
         if mast3r is None:
@@ -108,7 +109,7 @@ class LocalGPUEngine(EngineBase):
                 score = len(m0)
 
                 if score > 50:
-                    all_matches.append({
+                    match_entry = {
                         "inliers": score,
                         "panoid": pid,
                         "heading": hdg,
@@ -116,7 +117,10 @@ class LocalGPUEngine(EngineBase):
                         "lon": match.get("lon"),
                         "kp1": m0,
                         "kp2": m1,
-                    })
+                    }
+                    all_matches.append(match_entry)
+                    if match_collector is not None:
+                        match_collector.append(match_entry)
 
                 if score > best["inliers"]:
                     best = {

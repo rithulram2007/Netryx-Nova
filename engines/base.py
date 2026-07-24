@@ -27,6 +27,7 @@ class EngineBase(ABC):
         early_exit_threshold: int = 450,
         cancel_event: threading.Event | None = None,
         progress_callback: Any = None,
+        match_collector: list | None = None,
     ) -> dict:
         ...
 

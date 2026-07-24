@@ -26,8 +26,14 @@ MATCHING_TOP_K: int = 500
 EARLY_EXIT_INLIER_THRESHOLD: int = 300
 
 # ── Spatial Consensus ──────────────────────────────────────────────────────
-MAX_CONNECT_DIST_KM: float = 0.03
-BUCKET_SIZE: float = 0.0002
+CELL_SIZE_DEG: float = 0.00045 # ~50m grid
+CONSENSUS_TOP_K: int = 10
+NEIGHBORHOOD_RANGE: int = 1  # 3x3 neighborhood
+
+# ── Pipeline Controller ────────────────────────────────────────────────────
+MAX_CONCURRENT_GPU_JOBS: int = 1
+MAX_CONCURRENT_CPU_JOBS: int = 2
+JOB_CLEANUP_TIMEOUT_SECONDS: int = 300
 
 # ── Performance Tuning ─────────────────────────────────────────────────────
 MAX_PANOID_WORKERS: int = 32
