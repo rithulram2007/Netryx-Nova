@@ -1,0 +1,20 @@
+{
+  "format_version": "2.0",
+  "name": "Test Fixture 50",
+  "description": "Synthetic test fixture with 50 entries",
+  "creator": "test",
+  "created_at": "2026-07-24T00:00:00Z",
+  "center_lat": 55.7558,
+  "center_lon": 37.6173,
+  "radius_km": 5.0,
+  "num_entries": 50,
+  "num_panoids": 50,
+  "descriptor_dim": 1024,
+  "raw_descriptor_dim": 8448,
+  "descriptor_model": "MegaLoc",
+  "pca_components": 1024,
+  "tags": [
+    "test",
+    "fixture"
+  ]
+}
