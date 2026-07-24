@@ -134,8 +134,11 @@ class PipelineController:
             self._current_engine = LocalGPUEngine("mps")
         elif engine_type == "cpu":
             self._current_engine = LocalCPUEngine()
+        elif engine_type == "cloud":
+            from engines.cloud_modal import CloudModalEngine
+            self._current_engine = CloudModalEngine()
         else:
-            self._current_engine = auto_detect_engine()
+            self._current_engine = auto_detect_engine(engine_type)
 
         self._current_engine_type = engine_type
         log.info("Engine set to %s", type(self._current_engine).__name__)
