@@ -1,7 +1,7 @@
 @echo off
 echo.
 echo ===================================================
-echo   Netryx Astra V2 - Windows Setup
+echo   Netryx Nova - Windows Setup (fork of Netryx Astra V2)
 echo ===================================================
 echo.
 

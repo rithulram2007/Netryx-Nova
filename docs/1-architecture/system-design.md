@@ -7,7 +7,7 @@
     |
     | (uploads photo via browser, sees Leaflet map)
     v
-[Netryx Astra V2 (FastAPI)] --- fetches panoramas ---> [Google Street View API]
+[Netryx Nova (FastAPI)] --- fetches panoramas ---> [Google Street View API]
     |
     | (downloads indexes, uploads new ones)
     v

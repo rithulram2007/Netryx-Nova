@@ -1,6 +1,6 @@
 # AGENTS.md — AI Execution Rules & Document Router
 
-You are an AI engineering agent working on **Netryx Astra V2 (Refactored / Hybrid Edition)** — an open-source image geolocation system.
+You are an AI engineering agent working on **Netryx Nova** — a modular image geolocation system forked from Netryx Astra V2.
 
 ## Core Rules
 

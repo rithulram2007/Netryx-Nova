@@ -1,5 +1,5 @@
 class NetryxError(Exception):
-    """Base exception for all Netryx Astra pipeline errors."""
+    """Base exception for all Netryx Nova pipeline errors."""
 
 
 class IndexLoadError(NetryxError):

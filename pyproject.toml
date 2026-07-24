@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.backends._legacy:_Backend"
 
 [project]
-name = "netryx-astra-v2"
-version = "2.0.0"
-description = "Open-source image geolocation system with FAISS retrieval and MASt3R dense matching"
+name = "netryx-nova"
+version = "1.0.0"
+description = "Fork of Netryx Astra V2 — modular image geolocation with FAISS retrieval and MASt3R dense matching"
 requires-python = ">=3.10"
 dependencies = [
     "torch",

@@ -66,9 +66,33 @@
 - Verified: both engines inherit EngineBase, factory + import chain works, all pass `ruff` + `mypy`
 - **Next**: Phase 3 — Pipeline Integration (`core/consensus.py`, `core/pipeline.py`, hardware auto-detect)
 
-## Session Checklist (End of Session)
+### Session 6 — 2026-07-24 (Phase 3: Pipeline Integration)
+- Added pipeline constants to `config.py`: `CELL_SIZE_DEG`, `CONSENSUS_TOP_K`, `MAX_CONCURRENT_GPU_JOBS`, `MAX_CONCURRENT_CPU_JOBS`, `JOB_CLEANUP_TIMEOUT_SECONDS`
+- Created `core/consensus.py` — pure NumPy spatial clustering: grid cells at 0.00045° (~50m), 3x3 neighborhood scoring with sqrt(inlier) weighting, top-10 panoid-deduped ranking
+- Created `core/pipeline.py` — `PipelineController` with full async job lifecycle: queued → running → complete|failed|cancelled, WS progress queue, cancellation via `threading.Event`, engine slot management (1 GPU / 2 CPU concurrent), background stale-job cleanup loop
+- Updated `engines/base.py` — added `match_collector` param to `run_stage2()` so controllers can collect all scored matches for consensus without coupling to internal `_build_result`
+- Updated `engines/local_gpu.py` / `local_cpu.py` — populate `match_collector` when provided
+- Verified with `ruff` + `mypy` (zero errors across all new/changed files)
+- Committed as: `feat(pipeline): add PipelineController, consensus module, and hardware auto-detect`
+- **Next**: Phase 4 — Web UI (FastAPI routes, Leaflet map, WebSocket handler)
 
-- [x] PROGRESS.md updated with this session's work
+### Session 7 — 2026-07-24 (Phase 4: Web UI)
+- Created `ui/web_app.py` — FastAPI `APIRouter` with 7 endpoints: `POST /api/v1/index/load` (multipart .netryx upload), `GET /api/v1/index/info` (loaded index stats), `GET /api/v1/index/hub/list` (community indexes), `POST /api/v1/index/hub/download` (from HF Hub), `POST /api/v1/search/run` → 202 + job_id (image + lat/lon/radius), `GET /api/v1/search/status/{job_id}` (polling), `WS /api/v1/ws/search` (real-time progress via job progress_queue), `GET /api/v1/index/coverage` (GeoJSON point cloud)
+- Created `ui/templates/index.html` — single-page app: dark theme, sidebar (upload zone, community hub list, search form with lat/lon/radius + image picker + engine selector), Leaflet map container, progress bar, ranked results panel
+- Created `ui/static/js/map.js` — Leaflet init with CartoDB dark tiles, `addCandidate()` / `addClusterMarker()` / `flyTo()` / `loadCoverage()`
+- Created `ui/static/js/app.js` — WebSocket client: connects after search, processes `status`/`progress`/`complete`/`error` messages, updates progress bar, renders result cards with click-to-fly interaction, cancel support, upload drag-and-drop, hub download
+- Created `ui/static/css/style.css` — full dark theme (CSS variables), flex layout, upload drag-drop zone, form styling, progress bar, result cards, Leaflet overrides
+- Updated `app.py` — Jinja2Templates + StaticFiles mount, router inclusion, root route with `request` injection
+- Verified: `ruff` clean, all 14 routes registered (import check passed)
+- Committed as: `feat(web-ui): add FastAPI routes, Leaflet map, WebSocket client, dark theme`
+### Session 8 — 2026-07-24 (Rename: Netryx Nova)
+- Renamed project from "Netryx Astra V2" to **Netryx Nova**
+- Updated: `app.py`, `pyproject.toml`, `AGENTS.md`, `PROJECT_OVERVIEW.md`, `ui/templates/index.html`,
+  `setup.bat`, `setup.sh`, `core/exceptions.py`, `docs/1-architecture/system-design.md`,
+  `docs/3-api/api-spec-template.md`, `docs/PROGRESS.md`
+- **Next**: Phase 5 — Cloud Deployment (Modal worker, CloudModalEngine)
+
+## Session Checklist (End of Session)
 - [x] ROADMAP.md reflects current phase
 - [ ] No debugging artifacts left in codebase
 - [ ] If files were created, verified with lint/typecheck if applicable

@@ -1,10 +1,10 @@
-# PROJECT OVERVIEW — Netryx Astra V2 (Refactored / Hybrid Edition)
+# PROJECT OVERVIEW — Netryx Nova
 
 ## Executive Summary
 
-Netryx Astra V2 is an open-source, state-of-the-art image geolocation system. Given a single photograph — even a cropped, blurry, or metadata-free image — it identifies the precise GPS coordinates by matching visual features against a pre-indexed database of street-view panoramas.
+Netryx Nova is a modular fork of Netryx Astra V2, an open-source, state-of-the-art image geolocation system. Given a single photograph — even a cropped, blurry, or metadata-free image — it identifies the precise GPS coordinates by matching visual features against a pre-indexed database of street-view panoramas.
 
-This edition is a **complete modular refactoring** of the original monolithic Tkinter codebase. It decouples the pipeline into clean Python modules, introduces an **on-the-fly FAISS vector indexer** for ultra-fast retrieval, replaces the legacy GUI with an **interactive Web UI (FastAPI + Leaflet.js)** featuring live map plotting, and supports **three execution engines**: Local GPU (CUDA/MPS), Serverless Cloud GPU (Modal.com), and Local CPU fallback.
+This edition is a **complete modular refactoring** of the original Netryx Astra V2 monolithic Tkinter codebase. It decouples the pipeline into clean Python modules, introduces an **on-the-fly FAISS vector indexer** for ultra-fast retrieval, replaces the legacy GUI with an **interactive Web UI (FastAPI + Leaflet.js)** featuring live map plotting, and supports **three execution engines**: Local GPU (CUDA/MPS), Serverless Cloud GPU (Modal.com), and Local CPU fallback.
 
 ## Target Audience
 

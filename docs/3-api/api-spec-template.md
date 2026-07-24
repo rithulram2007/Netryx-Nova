@@ -10,7 +10,7 @@ All endpoints are prefixed with `/api/v1`.
 
 ## Authentication
 
-None. Netryx Astra V2 is a local-first tool. Hugging Face tokens for Community Hub uploads are passed as environment variables or form fields, not as API auth.
+None. Netryx Nova is a local-first tool. Hugging Face tokens for Community Hub uploads are passed as environment variables or form fields, not as API auth.
 
 ---
 

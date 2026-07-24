@@ -1,6 +1,6 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# Netryx Astra V2 — One-command setup
+# Netryx Nova — One-command setup (fork of Netryx Astra V2)
 # Run: chmod +x setup.sh && ./setup.sh
 # ═══════════════════════════════════════════════════════════════
 set -e
@@ -9,7 +9,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo ""
-echo "🔱 Netryx Astra V2 — Setup"
+echo "🔱 Netryx Nova — Setup"
 echo "═══════════════════════════════════════"
 echo ""
 
