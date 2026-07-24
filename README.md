@@ -22,6 +22,10 @@ Netryx Nova is a **complete modular refactoring** of [Netryx Astra V2](https://g
 
 The original was a 2800-line Tkinter monolith. Nova decouples it into **clean Python modules** with a FastAPI web UI, three execution engines (GPU / Cloud GPU / CPU), and on-the-fly FAISS vector search.
 
+<p align="center">
+  <img src="assets/demo.gif" width="800" alt="Netryx Nova in action">
+</p>
+
 ## What Changed
 
 | | Astra V2 (monolith) | Nova (modular) |
