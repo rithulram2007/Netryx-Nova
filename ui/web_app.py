@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -88,9 +89,9 @@ async def hub_download(repo_name: str = Form(...)) -> JSONResponse:
         from netryx_hub import NetryxHub
         hub = NetryxHub()
         os.makedirs(COMPACT_INDEX_DIR, exist_ok=True)
-        manifest = hub.download(repo_name, COMPACT_INDEX_DIR)
+        manifest = await asyncio.to_thread(hub.download, repo_name, COMPACT_INDEX_DIR)
         reset_index()
-        load_or_build_index(force_reload=True)
+        await asyncio.to_thread(load_or_build_index, force_reload=True)
         return JSONResponse(content={"status": "ok", "message": f"Downloaded {repo_name}", "manifest": manifest})
     except ImportError:
         return JSONResponse(content={"error": "huggingface_hub not installed"}, status_code=400)

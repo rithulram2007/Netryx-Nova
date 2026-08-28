@@ -121,3 +121,18 @@
 - Created `.env.example` — documents available env vars
 - Set remote → `https://github.com/mangodxd/Netryx-Nova.git` and pushed
 - Repo published on GitHub
+
+### Session 12 — 2026-08-29 (Modal Worker Deployment Setup)
+- Installed Modal CLI (`pip install modal`)
+- Checked Modal authentication status (`python -m modal token info` -> authentication required)
+- Fixed Modal SDK v1.5.4 compatibility in `modal_app/mast3r_worker.py`:
+  - Removed deprecated `required=False` kwarg in `modal.Secret.from_name()`
+  - Renamed deprecated `container_idle_timeout=120` to `scaledown_window=120`
+- Documented deployment steps (`modal setup`, `modal deploy modal_app/mast3r_worker.py`) and Render Netryx service environment variables (`MODAL_WORKER_URL`, `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET`)
+
+### Session 13 — 2026-08-29 (Hub Download Safe Response & Offloading Fix)
+- Updated `ui/static/js/app.js` `downloadHub()` to read `resp.text()` and safely parse JSON with fallback error handling.
+- Updated `ui/web_app.py` `hub_download` endpoint to run `hub.download()` and `load_or_build_index()` in worker threads using `asyncio.to_thread()`.
+- Verified test suite: 21 passed, 2 skipped (faiss).
+
+

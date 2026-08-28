@@ -112,8 +112,8 @@ try:
         image=_MODAL_IMAGE,
         gpu="T4",
         timeout=600,
-        container_idle_timeout=120,
-        secrets=[modal.Secret.from_name("netryx-hf-token", required=False)],
+        scaledown_window=120,
+        secrets=[modal.Secret.from_name("netryx-hf-token")],
     )
     @modal.asgi_app()
     def fastapi_app() -> FastAPI:

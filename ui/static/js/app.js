@@ -114,14 +114,20 @@ const NetryxApp = (() => {
     form.append('repo_name', repoName);
     try {
       const resp = await fetch('/api/v1/index/hub/download', { method: 'POST', body: form });
-      const data = await resp.json();
-      if (resp.ok) {
+      const respText = await resp.text();
+      let data;
+      try {
+        data = respText ? JSON.parse(respText) : {};
+      } catch {
+        data = { error: respText || `HTTP ${resp.status} ${resp.statusText}` };
+      }
+      if (resp.ok && data.status === 'ok') {
         DOM.uploadStatus().textContent = data.message;
         DOM.uploadStatus().className = 'upload-status loaded';
         loadIndexInfo();
         loadCoverage();
       } else {
-        alert('Download failed: ' + (data.error || 'Unknown'));
+        alert('Download failed: ' + (data.error || `HTTP ${resp.status}`));
       }
     } catch (e) {
       alert('Download error: ' + e.message);
