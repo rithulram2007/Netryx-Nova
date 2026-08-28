@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import shutil
 import zipfile
 from typing import Any
 
@@ -77,10 +78,9 @@ def load_netryx_bundle(bundle_path: str, index_dir: str) -> dict[str, Any]:
 
         for src_name, dst_name in file_mapping.items():
             if src_name in zf.namelist():
-                data = zf.read(src_name)
                 dst_path = os.path.join(index_dir, dst_name)
-                with open(dst_path, "wb") as f:
-                    f.write(data)
+                with zf.open(src_name) as src, open(dst_path, "wb") as dst:
+                    shutil.copyfileobj(src, dst)
                 log.debug("  Extracted %s -> %s", src_name, dst_name)
 
     log.info("Bundle loaded: %s", manifest.get("name", "unknown"))

@@ -264,10 +264,9 @@ def extract_bundle(bundle_path, index_dir):
 
         for src_name, dst_name in file_mapping.items():
             if src_name in zf.namelist():
-                data = zf.read(src_name)
                 dst_path = os.path.join(index_dir, dst_name)
-                with open(dst_path, 'wb') as f:
-                    f.write(data)
+                with zf.open(src_name) as src, open(dst_path, "wb") as dst:
+                    shutil.copyfileobj(src, dst)
                 print(f"[HUB]   Extracted {src_name} -> {dst_name}")
 
     print(f"[HUB] Bundle loaded. Ready to search.")
