@@ -3,7 +3,7 @@ from typing import Any
 
 import numpy as np
 
-from config import COMPACT_INDEX_DIR, RETRIEVAL_TOP_K
+from config import COMPACT_INDEX_DIR, RETRIEVAL_TOP_K, USE_FAISS
 from core.exceptions import IndexNotFoundError
 from utils.netryx_loader import build_faiss_index, load_compact_index
 
@@ -12,12 +12,12 @@ log = logging.getLogger("netryx.retrieval")
 _index_instance: Any = None
 _metadata_instance: dict[str, Any] | None = None
 _index_dir_loaded: str | None = None
-_use_faiss: bool = True
+_use_faiss: bool = USE_FAISS
 
 
 def load_or_build_index(
     index_dir: str | None = None,
-    use_faiss: bool = True,
+    use_faiss: bool = USE_FAISS,
     force_reload: bool = False,
 ) -> tuple[Any, dict[str, Any]]:
     global _index_instance, _metadata_instance, _index_dir_loaded, _use_faiss
