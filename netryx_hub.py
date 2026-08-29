@@ -521,6 +521,7 @@ class NetryxHub:
 
         file_mapping = {
             "descriptors.npy": "megaloc_descriptors.npy",
+            "megaloc_descriptors.npy": "megaloc_descriptors.npy",
             "metadata.npz": "metadata.npz",
             "pca_model.pkl": "megaloc_pca.pkl",
             "manifest.json": "manifest.json",
