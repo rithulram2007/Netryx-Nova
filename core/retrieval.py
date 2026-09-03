@@ -4,7 +4,7 @@ from typing import Any
 
 import numpy as np
 
-from config import COMPACT_INDEX_DIR, MODAL_WORKER_URL, RETRIEVAL_TOP_K, USE_FAISS
+from config import COMPACT_DESCS_PATH, COMPACT_INDEX_DIR, MODAL_WORKER_URL, RETRIEVAL_TOP_K, USE_FAISS
 from core.exceptions import IndexNotFoundError
 from utils.netryx_loader import build_faiss_index, load_compact_index
 
@@ -21,9 +21,10 @@ def use_remote_modal() -> bool:
         return False
     if os.environ.get("USE_REMOTE_MODAL", "").lower() in ("0", "false", "no"):
         return False
-    _on_render = os.environ.get("RENDER", "").lower() in ("true", "1")
+    _on_render = os.environ.get("RENDER", "").lower() in ("true", "1") or "RENDER_SERVICE_ID" in os.environ
     _explicit_remote = os.environ.get("USE_REMOTE_MODAL", "").lower() in ("true", "1")
-    return _on_render or _explicit_remote
+    _no_local_index = not os.path.exists(COMPACT_DESCS_PATH)
+    return _on_render or _explicit_remote or _no_local_index
 
 
 def load_or_build_index(
@@ -33,7 +34,7 @@ def load_or_build_index(
 ) -> tuple[Any, dict[str, Any]]:
     global _index_instance, _metadata_instance, _index_dir_loaded, _use_faiss
 
-    if use_remote_modal():
+    if use_remote_modal() and (not index_dir or not os.path.exists(os.path.join(index_dir, "megaloc_descriptors.npy"))):
         from engines.cloud_modal import CloudModalEngine
         info = CloudModalEngine().get_index_info()
         if not info.get("loaded"):
