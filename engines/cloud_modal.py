@@ -42,7 +42,7 @@ class CloudModalEngine(EngineBase):
 
     @staticmethod
     def available() -> bool:
-        return bool(_MODAL_TOKEN_ID and _MODAL_TOKEN_SECRET)
+        return bool(_DEFAULT_ENDPOINT or (_MODAL_TOKEN_ID and _MODAL_TOKEN_SECRET))
 
     def run_stage2(
         self,
@@ -188,10 +188,18 @@ class CloudModalEngine(EngineBase):
             if query_np is not None:
                 if isinstance(query_np, np.ndarray):
                     vec = query_np.flatten().astype(np.float32)
-                    if len(vec) != 1024:
-                        vec = np.zeros((1024,), dtype=np.float32)
-                    qbytes = vec.tobytes()
-                    files = {"query": ("query.bin", qbytes, "application/octet-stream")}
+                    if len(vec) == 1024:
+                        qbytes = vec.tobytes()
+                        files = {"query": ("query.bin", qbytes, "application/octet-stream")}
+                    else:
+                        try:
+                            qimg = Image.fromarray(query_np.astype(np.uint8))
+                            buf = io.BytesIO()
+                            qimg.save(buf, format="JPEG", quality=85)
+                            files = {"query": ("query.jpg", buf.getvalue(), "image/jpeg")}
+                        except Exception:
+                            qbytes = np.zeros((1024,), dtype=np.float32).tobytes()
+                            files = {"query": ("query.bin", qbytes, "application/octet-stream")}
                 elif isinstance(query_np, (bytes, bytearray)):
                     files = {"query": ("query.bin", bytes(query_np), "application/octet-stream")}
                 elif isinstance(query_np, Image.Image):

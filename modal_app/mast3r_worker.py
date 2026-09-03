@@ -17,6 +17,7 @@ web_app = FastAPI(title="Netryx Nova Modal Worker")
 
 
 def _ensure_app_imports() -> None:
+    os.environ["INSIDE_MODAL"] = "1"
     candidates = [
         os.path.abspath("."),
         os.path.abspath(".."),
