@@ -8,7 +8,7 @@ from fastapi import APIRouter, File, Form, UploadFile, WebSocket, WebSocketDisco
 from fastapi.responses import JSONResponse
 from PIL import Image
 
-from config import COMPACT_INDEX_DIR
+from config import COMPACT_DESCS_PATH, COMPACT_INDEX_DIR, MODAL_WORKER_URL
 from core.exceptions import IndexNotFoundError
 from core.pipeline import PipelineController
 from core.retrieval import load_or_build_index, reset_index, use_remote_modal
@@ -17,6 +17,21 @@ log = logging.getLogger("netryx.web")
 
 router = APIRouter(prefix="/api/v1")
 pipeline = PipelineController()
+
+
+@router.get("/debug/remote")
+async def debug_remote() -> JSONResponse:
+    """Debug endpoint: shows remote-modal routing status."""
+    import os as _os
+    return JSONResponse(content={
+        "use_remote_modal": use_remote_modal(),
+        "INSIDE_MODAL": _os.environ.get("INSIDE_MODAL", ""),
+        "RENDER": _os.environ.get("RENDER", ""),
+        "USE_REMOTE_MODAL_ENV": _os.environ.get("USE_REMOTE_MODAL", ""),
+        "MODAL_WORKER_URL": MODAL_WORKER_URL,
+        "local_index_exists": _os.path.exists(COMPACT_DESCS_PATH),
+        "version": "35a1170",
+    })
 
 
 @router.get("/index/info")

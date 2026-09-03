@@ -59,10 +59,6 @@ COMPACT_INFO_PATH: str = os.path.join(COMPACT_INDEX_DIR, "index_info.txt")
 _on_render = os.environ.get("RENDER", "").lower() in ("true", "1")
 USE_FAISS: bool = not _on_render if os.environ.get("USE_FAISS") is None else os.environ.get("USE_FAISS", "1") not in ("0", "false", "no")
 
-COMPACT_DESCS_PATH: str = os.path.join(COMPACT_INDEX_DIR, "megaloc_descriptors.npy")
-COMPACT_META_PATH: str = os.path.join(COMPACT_INDEX_DIR, "metadata.npz")
-COMPACT_INFO_PATH: str = os.path.join(COMPACT_INDEX_DIR, "index_info.txt")
-
 USE_REMOTE_MODAL: bool = (
     os.environ.get("USE_REMOTE_MODAL", "1").lower() not in ("0", "false", "no")
     if (_on_render or not os.path.exists(COMPACT_DESCS_PATH))
