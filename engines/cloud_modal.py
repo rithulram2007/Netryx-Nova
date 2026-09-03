@@ -10,14 +10,14 @@ import requests
 import numpy as np
 from PIL import Image
 
-from config import MATCHING_TOP_K
+from config import MATCHING_TOP_K, MODAL_WORKER_URL
 from engines.base import EngineBase
 
 log = logging.getLogger("netryx.engine.cloud")
 
 _MODAL_TOKEN_ID = os.environ.get("MODAL_TOKEN_ID")
 _MODAL_TOKEN_SECRET = os.environ.get("MODAL_TOKEN_SECRET")
-_DEFAULT_ENDPOINT = os.environ.get("MODAL_WORKER_URL", "http://localhost:8001")
+_DEFAULT_ENDPOINT = MODAL_WORKER_URL
 
 
 class CloudModalEngine(EngineBase):
