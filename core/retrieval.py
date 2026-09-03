@@ -4,7 +4,7 @@ from typing import Any
 
 import numpy as np
 
-from config import COMPACT_DESCS_PATH, COMPACT_INDEX_DIR, MODAL_WORKER_URL, RETRIEVAL_TOP_K, USE_FAISS
+from config import COMPACT_DESCS_PATH, COMPACT_INDEX_DIR, MODAL_WORKER_URL, RETRIEVAL_TOP_K, USE_FAISS, USE_REMOTE_MODAL as _USE_REMOTE_MODAL_CFG
 from core.exceptions import IndexNotFoundError
 from utils.netryx_loader import build_faiss_index, load_compact_index
 
