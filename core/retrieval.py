@@ -19,6 +19,8 @@ _use_faiss: bool = USE_FAISS
 def use_remote_modal() -> bool:
     if os.environ.get("INSIDE_MODAL", "").lower() in ("true", "1"):
         return False
+    if os.environ.get("USE_REMOTE_MODAL", "").lower() in ("0", "false", "no"):
+        return False
     _on_render = os.environ.get("RENDER", "").lower() in ("true", "1")
     _explicit_remote = os.environ.get("USE_REMOTE_MODAL", "").lower() in ("true", "1")
     return _on_render or _explicit_remote
