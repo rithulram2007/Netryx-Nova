@@ -130,9 +130,16 @@
   - Renamed deprecated `container_idle_timeout=120` to `scaledown_window=120`
 - Documented deployment steps (`modal setup`, `modal deploy modal_app/mast3r_worker.py`) and Render Netryx service environment variables (`MODAL_WORKER_URL`, `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET`)
 
-### Session 13 — 2026-08-29 (Hub Download Safe Response & Offloading Fix)
-- Updated `ui/static/js/app.js` `downloadHub()` to read `resp.text()` and safely parse JSON with fallback error handling.
-- Updated `ui/web_app.py` `hub_download` endpoint to run `hub.download()` and `load_or_build_index()` in worker threads using `asyncio.to_thread()`.
+### Session 15 — 2026-08-29 (Fallback File Mapping Fix)
+- Updated `netryx_hub.py` `_download_individual()` `file_mapping` to support both `descriptors.npy` and `megaloc_descriptors.npy` mapping to `megaloc_descriptors.npy`.
 - Verified test suite: 21 passed, 2 skipped (faiss).
 
-
+### Session 16 — 2026-09-03 (Modal FAISS Offloading Architecture)
+- **Goal**: Offload FAISS index materialization and Stage 1 vector search from Render (512 MB RAM limit) to Modal T4 Cloud Worker. Render acts as a lightweight HTTP API router.
+- **Accomplished**:
+  - Updated `modal_app/mast3r_worker.py`: Added `/search`, `/index/hub/download`, `/index/load`, `/index/info`, `/index/coverage` endpoints. Modal owns FAISS index materialization and vector search. Added `faiss-cpu` and `huggingface_hub` to Modal container image.
+  - Updated `engines/cloud_modal.py`: Added HTTP client methods `search_index()`, `get_index_info()`, `download_hub_index()`, `upload_index()`, `get_index_coverage()`.
+  - Updated `core/retrieval.py` & `ui/web_app.py`: When remote Modal is active (e.g. `RENDER=1` or `USE_REMOTE_MODAL=1`), Render proxies search and index requests to Modal via HTTP. Render no longer loads `megaloc_descriptors.npy` or builds FAISS in Render memory, keeping memory usage ~35-40 MB.
+  - Made PyTorch imports lazy/safe across `engines/`, `core/matching.py`, `mast3r_utils.py`, and `utils/geo_utils.py` so lightweight API router environments without PyTorch run cleanly.
+  - Added `tests/test_remote_modal.py` unit test suite covering remote search and web app routing. All 24 active unit tests pass cleanly (`pytest tests/ -v`).
+- **Status**: Complete & Verified.

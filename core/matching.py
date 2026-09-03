@@ -2,7 +2,10 @@ import logging
 from typing import Any
 
 import numpy as np
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None  # type: ignore[assignment]
 from PIL import Image
 
 import mast3r_utils
@@ -13,7 +16,7 @@ log = logging.getLogger("netryx.matching")
 _model_instance: Any = None
 
 
-def get_lazy_mast3r(device: torch.device | None = None) -> Any:
+def get_lazy_mast3r(device: Any = None) -> Any:
     global _model_instance
     if _model_instance is None:
         _model_instance = get_mast3r_model()

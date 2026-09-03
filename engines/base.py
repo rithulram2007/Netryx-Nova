@@ -4,7 +4,10 @@ import threading
 from abc import ABC, abstractmethod
 from typing import Any
 
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None  # type: ignore[assignment]
 from PIL import Image
 
 log = logging.getLogger("netryx.engine")
@@ -14,7 +17,7 @@ class EngineBase(ABC):
 
     @property
     @abstractmethod
-    def device(self) -> torch.device:
+    def device(self) -> Any:
         ...
 
     @abstractmethod
@@ -33,10 +36,11 @@ class EngineBase(ABC):
 
     def unload_models(self) -> None:
         self._unload_mast3r()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        if torch.backends.mps.is_available():
-            torch.mps.empty_cache()
+        if torch is not None:
+            if hasattr(torch, "cuda") and torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            if hasattr(torch, "backends") and hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                torch.mps.empty_cache()
         gc.collect()
         log.info("Engine models unloaded, VRAM cleared")
 

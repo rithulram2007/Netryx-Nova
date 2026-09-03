@@ -52,12 +52,17 @@ COMPACT_DESCS_PATH: str = os.path.join(COMPACT_INDEX_DIR, "megaloc_descriptors.n
 COMPACT_META_PATH: str = os.path.join(COMPACT_INDEX_DIR, "metadata.npz")
 COMPACT_INFO_PATH: str = os.path.join(COMPACT_INDEX_DIR, "index_info.txt")
 
-# ── FAISS Toggle ───────────────────────────────────────────────
+# ── FAISS Toggle & Cloud Modal ─────────────────────────────────────────────
 # Render free tier has 512 MB RAM.  build_faiss_index() materialises
 # ~400 MB of descriptor copies and gets the process OOM-killed.
 # Auto-disable on Render; override with USE_FAISS=1 if you have enough RAM.
 _on_render = os.environ.get("RENDER", "").lower() in ("true", "1")
 USE_FAISS: bool = not _on_render if os.environ.get("USE_FAISS") is None else os.environ.get("USE_FAISS", "1") not in ("0", "false", "no")
+
+MODAL_WORKER_URL: str = os.environ.get(
+    "MODAL_WORKER_URL",
+    "https://varanasirithulram--netryx-nova-worker-fastapi-app.modal.run",
+)
 
 # ── Server ─────────────────────────────────────────────────────────────────
 HOST: str = "0.0.0.0"

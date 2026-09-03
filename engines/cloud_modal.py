@@ -7,7 +7,7 @@ from collections.abc import Callable
 from typing import Any
 
 import requests
-import torch
+import numpy as np
 from PIL import Image
 
 from config import MATCHING_TOP_K
@@ -29,11 +29,15 @@ class CloudModalEngine(EngineBase):
     ) -> None:
         self._endpoint = endpoint_url.rstrip("/")
         self._auth = (token_id, token_secret) if token_id and token_secret else None
-        self._device = torch.device("cpu")
+        try:
+            import torch
+            self._device = torch.device("cpu")
+        except ImportError:
+            self._device = "cpu"  # type: ignore[assignment]
         log.info("CloudModalEngine -> %s", self._endpoint)
 
     @property
-    def device(self) -> torch.device:
+    def device(self) -> Any:
         return self._device
 
     @staticmethod
@@ -161,6 +165,110 @@ class CloudModalEngine(EngineBase):
             "all_matches": all_matches,
             "total_candidates": len(candidates[:MATCHING_TOP_K]),
         }
+
+    def search_index(
+        self,
+        query_np: Any,
+        center: tuple[float, float],
+        radius_km: float,
+        top_k: int = 1000,
+        repo_name: str | None = None,
+    ) -> list[dict[str, Any]]:
+        try:
+            data: dict[str, Any] = {
+                "lat": center[0],
+                "lon": center[1],
+                "radius": radius_km,
+                "top_k": top_k,
+            }
+            if repo_name:
+                data["repo_name"] = repo_name
+
+            files = None
+            if query_np is not None:
+                if isinstance(query_np, np.ndarray):
+                    vec = query_np.flatten().astype(np.float32)
+                    if len(vec) != 1024:
+                        vec = np.zeros((1024,), dtype=np.float32)
+                    qbytes = vec.tobytes()
+                    files = {"query": ("query.bin", qbytes, "application/octet-stream")}
+                elif isinstance(query_np, (bytes, bytearray)):
+                    files = {"query": ("query.bin", bytes(query_np), "application/octet-stream")}
+                elif isinstance(query_np, Image.Image):
+                    buf = io.BytesIO()
+                    query_np.save(buf, format="JPEG", quality=85)
+                    files = {"query": ("query.jpg", buf.getvalue(), "image/jpeg")}
+
+            if files is None:
+                qbytes = np.zeros((1024,), dtype=np.float32).tobytes()
+                files = {"query": ("query.bin", qbytes, "application/octet-stream")}
+
+            resp = requests.post(
+                f"{self._endpoint}/search",
+                data=data,
+                files=files,
+                auth=self._auth,
+                timeout=120,
+            )
+            if resp.status_code == 200:
+                res = resp.json()
+                return res.get("candidates", [])
+            log.error("Modal /search error HTTP %d: %s", resp.status_code, resp.text[:200])
+            return []
+        except Exception as e:
+            log.exception("CloudModalEngine search_index failed: %s", e)
+            return []
+
+    def get_index_info(self) -> dict[str, Any]:
+        try:
+            resp = requests.get(f"{self._endpoint}/index/info", auth=self._auth, timeout=30)
+            if resp.status_code == 200:
+                return resp.json()
+            return {"loaded": False, "entries": 0}
+        except Exception as e:
+            log.warning("Modal /index/info failed: %s", e)
+            return {"loaded": False, "entries": 0}
+
+    def download_hub_index(self, repo_name: str) -> dict[str, Any]:
+        try:
+            resp = requests.post(
+                f"{self._endpoint}/index/hub/download",
+                data={"repo_name": repo_name},
+                auth=self._auth,
+                timeout=300,
+            )
+            if resp.status_code == 200:
+                return resp.json()
+            return {"error": f"HTTP {resp.status_code}: {resp.text[:200]}"}
+        except Exception as e:
+            log.exception("Modal /index/hub/download failed: %s", e)
+            return {"error": str(e)}
+
+    def upload_index(self, file_bytes: bytes, filename: str) -> dict[str, Any]:
+        try:
+            files = {"file": (filename, file_bytes, "application/octet-stream")}
+            resp = requests.post(
+                f"{self._endpoint}/index/load",
+                files=files,
+                auth=self._auth,
+                timeout=300,
+            )
+            if resp.status_code == 200:
+                return resp.json()
+            return {"error": f"HTTP {resp.status_code}: {resp.text[:200]}"}
+        except Exception as e:
+            log.exception("Modal /index/load failed: %s", e)
+            return {"error": str(e)}
+
+    def get_index_coverage(self) -> dict[str, Any]:
+        try:
+            resp = requests.get(f"{self._endpoint}/index/coverage", auth=self._auth, timeout=30)
+            if resp.status_code == 200:
+                return resp.json()
+            return {"type": "FeatureCollection", "features": []}
+        except Exception as e:
+            log.warning("Modal /index/coverage failed: %s", e)
+            return {"type": "FeatureCollection", "features": []}
 
     def unload_models(self) -> None:
         log.info("CloudModalEngine: no local models to unload")

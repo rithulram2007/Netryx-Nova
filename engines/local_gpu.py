@@ -2,8 +2,12 @@ import gc
 import logging
 import threading
 from collections.abc import Callable
+from typing import Any
 
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None  # type: ignore[assignment]
 from PIL import Image
 
 from config import MATCHING_TOP_K
@@ -21,7 +25,7 @@ log = logging.getLogger("netryx.engine.gpu")
 
 
 def _device_str() -> str:
-    if torch.cuda.is_available():
+    if torch is not None and hasattr(torch, "cuda") and torch.cuda.is_available():
         return "cuda"
     if torch.backends.mps.is_available():
         return "mps"
@@ -42,10 +46,8 @@ class LocalGPUEngine(EngineBase):
         log.info("GPU engine initialized on %s", self._device_str)
 
     @property
-    def device(self) -> torch.device:
-        d = self._device
-        assert d is not None
-        return d
+    def device(self) -> Any:
+        return self._device
 
     def run_stage2(
         self,

@@ -1,8 +1,6 @@
 import logging
 from typing import Any
 
-import torch
-
 from engines.cloud_modal import CloudModalEngine
 from engines.local_cpu import LocalCPUEngine
 from engines.local_gpu import LocalGPUEngine
@@ -15,10 +13,18 @@ def auto_detect_engine(prefer: str = "auto") -> Any:
         log.info("Selected CloudModalEngine")
         return CloudModalEngine()
 
-    if prefer == "gpu" or (prefer == "auto" and torch.cuda.is_available()):
+    try:
+        import torch
+        has_cuda = torch.cuda.is_available()
+        has_mps = hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
+    except ImportError:
+        has_cuda = False
+        has_mps = False
+
+    if prefer == "gpu" or (prefer == "auto" and has_cuda):
         log.info("Auto-selected LocalGPUEngine")
         return LocalGPUEngine("cuda")
-    if prefer == "mps" or (prefer == "auto" and torch.backends.mps.is_available()):
+    if prefer == "mps" or (prefer == "auto" and has_mps):
         log.info("Auto-selected LocalGPUEngine (MPS)")
         return LocalGPUEngine("mps")
 

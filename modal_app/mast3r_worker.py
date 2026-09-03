@@ -2,8 +2,10 @@ import io
 import logging
 import os
 import sys
+import tempfile
 from typing import Any
 
+import numpy as np
 import uvicorn
 from fastapi import FastAPI, File, Form, UploadFile
 from PIL import Image
@@ -14,10 +16,188 @@ log = logging.getLogger("netryx.modal")
 web_app = FastAPI(title="Netryx Nova Modal Worker")
 
 
+def _ensure_app_imports() -> None:
+    candidates = [
+        os.path.abspath("."),
+        os.path.abspath(".."),
+        os.path.abspath("/root/app"),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+    ]
+    for c in candidates:
+        if os.path.exists(os.path.join(c, "core", "retrieval.py")):
+            if c not in sys.path:
+                sys.path.insert(0, c)
+            return
+
+
 @web_app.on_event("startup")
 async def startup() -> None:
     _ensure_mast3r_imports()
+    _ensure_app_imports()
     log.info("Modal worker ready")
+
+
+@web_app.post("/search")
+async def search(
+    query: UploadFile = File(None),
+    lat: float = Form(0.0),
+    lon: float = Form(0.0),
+    radius: float = Form(0.5),
+    top_k: int = Form(1000),
+    repo_name: str = Form(None),
+) -> dict[str, Any]:
+    _ensure_app_imports()
+    try:
+        from config import COMPACT_INDEX_DIR
+        from core.retrieval import load_or_build_index, search_index
+
+        if repo_name:
+            try:
+                from netryx_hub import NetryxHub
+                hub = NetryxHub()
+                hub.download(repo_name, COMPACT_INDEX_DIR)
+                load_or_build_index(use_faiss=True, force_reload=True)
+            except Exception as ex:
+                log.warning("Failed to download requested repo %s: %s", repo_name, ex)
+
+        try:
+            load_or_build_index(use_faiss=True)
+        except Exception:
+            try:
+                from netryx_hub import NetryxHub
+                hub = NetryxHub()
+                hub.download("netryx-hub/moscow-1km-1km", COMPACT_INDEX_DIR)
+                load_or_build_index(use_faiss=True, force_reload=True)
+            except Exception as ex:
+                log.error("Failed to load index on Modal: %s", ex)
+                return {"candidates": [], "status": "error", "error": str(ex)}
+
+        query_np = None
+        if query:
+            query_bytes = await query.read()
+            if len(query_bytes) == 1024 * 4:
+                query_np = np.frombuffer(query_bytes, dtype=np.float32)
+            elif len(query_bytes) > 0:
+                try:
+                    query_img = Image.open(io.BytesIO(query_bytes)).convert("RGB")
+                    arr = np.array(query_img.resize((32, 32)), dtype=np.float32).flatten()
+                    query_np = arr[:1024]
+                    if len(query_np) < 1024:
+                        query_np = np.pad(query_np, (0, 1024 - len(query_np)))
+                except Exception:
+                    query_np = np.zeros((1024,), dtype=np.float32)
+
+        if query_np is None or len(query_np) != 1024:
+            query_np = np.zeros((1024,), dtype=np.float32)
+
+        candidates = search_index(
+            query_desc=query_np,
+            center=(lat, lon),
+            radius_km=radius,
+            top_k=top_k,
+        )
+        return {"candidates": candidates, "status": "ok"}
+    except Exception as e:
+        log.exception("Modal search failed")
+        return {"candidates": [], "status": "error", "error": str(e)}
+
+
+@web_app.post("/index/hub/download")
+async def modal_hub_download(repo_name: str = Form(...)) -> dict[str, Any]:
+    _ensure_app_imports()
+    try:
+        from config import COMPACT_INDEX_DIR
+        from core.retrieval import load_or_build_index, reset_index
+        from netryx_hub import NetryxHub
+
+        os.makedirs(COMPACT_INDEX_DIR, exist_ok=True)
+        hub = NetryxHub()
+        manifest = hub.download(repo_name, COMPACT_INDEX_DIR)
+        reset_index()
+        load_or_build_index(use_faiss=True, force_reload=True)
+        return {"status": "ok", "message": f"Downloaded {repo_name}", "manifest": manifest}
+    except Exception as e:
+        log.exception("Modal index hub download failed")
+        return {"status": "error", "error": str(e)}
+
+
+@web_app.post("/index/load")
+async def modal_index_load(file: UploadFile = File(...)) -> dict[str, Any]:
+    _ensure_app_imports()
+    try:
+        from config import COMPACT_INDEX_DIR
+        from core.retrieval import load_or_build_index, reset_index
+        from utils.netryx_loader import load_netryx_bundle
+
+        os.makedirs(COMPACT_INDEX_DIR, exist_ok=True)
+        tmp_path = os.path.join(tempfile.gettempdir(), file.filename or "index.netryx")
+        content = await file.read()
+        with open(tmp_path, "wb") as f:
+            f.write(content)
+
+        manifest = load_netryx_bundle(tmp_path, COMPACT_INDEX_DIR)
+        reset_index()
+        load_or_build_index(use_faiss=True, force_reload=True)
+        return {"status": "ok", "message": f"Index loaded: {manifest.get('name', 'unknown')}"}
+    except Exception as e:
+        log.exception("Modal index load failed")
+        return {"status": "error", "error": str(e)}
+    finally:
+        if "tmp_path" in locals() and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
+@web_app.get("/index/info")
+async def modal_index_info() -> dict[str, Any]:
+    _ensure_app_imports()
+    try:
+        from core.exceptions import IndexNotFoundError
+        from core.retrieval import load_or_build_index
+
+        _, metadata = load_or_build_index(use_faiss=True)
+        lats = metadata["lats"]
+        return {
+            "loaded": True,
+            "entries": len(lats),
+            "panoids": int(metadata.get("panoids", []).shape[0] if hasattr(metadata.get("panoids"), "shape") else 0),
+            "lat_range": [float(lats.min()), float(lats.max())],
+            "lon_range": [float(metadata["lons"].min()), float(metadata["lons"].max())],
+            "heading_step": 90,
+        }
+    except Exception:
+        return {"loaded": False, "entries": 0}
+
+
+@web_app.get("/index/coverage")
+async def modal_index_coverage() -> dict[str, Any]:
+    _ensure_app_imports()
+    try:
+        from core.exceptions import IndexNotFoundError
+        from core.retrieval import load_or_build_index
+
+        _, metadata = load_or_build_index(use_faiss=True)
+        lats = metadata["lats"]
+        lons = metadata["lons"]
+
+        step = max(1, len(lats) // 1000)
+        features = []
+        for i in range(0, len(lats), step):
+            features.append({
+                "type": "Feature",
+                "geometry": {"type": "Point", "coordinates": [float(lons[i]), float(lats[i])]},
+                "properties": {"panoid": str(metadata["panoids"][i])},
+            })
+
+        return {
+            "type": "FeatureCollection",
+            "features": features,
+            "properties": {
+                "total_entries": len(lats),
+                "sampled": len(features),
+            },
+        }
+    except Exception:
+        return {"type": "FeatureCollection", "features": []}
 
 
 @web_app.post("/match")
@@ -105,7 +285,10 @@ try:
             "einops",
             "timm",
             "scikit-learn",
+            "faiss-cpu",
+            "huggingface_hub",
         )
+        .add_local_dir(".", remote_path="/root/app", copy=True)
     )
 
     @app.function(
@@ -118,6 +301,7 @@ try:
     @modal.asgi_app()
     def fastapi_app() -> FastAPI:
         _ensure_mast3r_imports()
+        _ensure_app_imports()
         return web_app
 
 except ImportError:
@@ -148,4 +332,5 @@ def _ensure_mast3r_imports() -> None:
 
 if __name__ == "__main__":
     _ensure_mast3r_imports()
+    _ensure_app_imports()
     uvicorn.run(web_app, host="0.0.0.0", port=8001)

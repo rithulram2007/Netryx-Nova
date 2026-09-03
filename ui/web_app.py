@@ -11,8 +11,7 @@ from PIL import Image
 from config import COMPACT_INDEX_DIR
 from core.exceptions import IndexNotFoundError
 from core.pipeline import PipelineController
-from core.retrieval import load_or_build_index, reset_index
-from utils.netryx_loader import load_netryx_bundle
+from core.retrieval import load_or_build_index, reset_index, use_remote_modal
 
 log = logging.getLogger("netryx.web")
 
@@ -23,6 +22,11 @@ pipeline = PipelineController()
 @router.get("/index/info")
 async def index_info() -> JSONResponse:
     try:
+        if use_remote_modal():
+            from engines.cloud_modal import CloudModalEngine
+            info = await asyncio.to_thread(CloudModalEngine().get_index_info)
+            return JSONResponse(content=info)
+
         _, metadata = load_or_build_index()
         lats = metadata["lats"]
         entries = len(lats)
@@ -44,11 +48,17 @@ async def index_load(file: UploadFile = File(...)) -> JSONResponse:
     if not file.filename or not file.filename.endswith(".netryx"):
         return JSONResponse(content={"error": "File must be a .netryx bundle"}, status_code=400)
 
-    os.makedirs(COMPACT_INDEX_DIR, exist_ok=True)
-
-    tmp_path = os.path.join(tempfile.gettempdir(), file.filename)
     try:
         content = await file.read()
+        if use_remote_modal():
+            from engines.cloud_modal import CloudModalEngine
+            res = await asyncio.to_thread(CloudModalEngine().upload_index, content, file.filename)
+            if "error" in res:
+                return JSONResponse(content=res, status_code=500)
+            return JSONResponse(content=res)
+
+        os.makedirs(COMPACT_INDEX_DIR, exist_ok=True)
+        tmp_path = os.path.join(tempfile.gettempdir(), file.filename)
         with open(tmp_path, "wb") as f:
             f.write(content)
 
@@ -66,7 +76,7 @@ async def index_load(file: UploadFile = File(...)) -> JSONResponse:
         log.exception("Failed to load index")
         return JSONResponse(content={"error": str(e)}, status_code=500)
     finally:
-        if os.path.exists(tmp_path):
+        if "tmp_path" in locals() and os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
 
@@ -86,6 +96,13 @@ async def hub_list() -> JSONResponse:
 @router.post("/index/hub/download")
 async def hub_download(repo_name: str = Form(...)) -> JSONResponse:
     try:
+        if use_remote_modal():
+            from engines.cloud_modal import CloudModalEngine
+            res = await asyncio.to_thread(CloudModalEngine().download_hub_index, repo_name)
+            if "error" in res:
+                return JSONResponse(content=res, status_code=500)
+            return JSONResponse(content=res)
+
         from netryx_hub import NetryxHub
         hub = NetryxHub()
         os.makedirs(COMPACT_INDEX_DIR, exist_ok=True)
@@ -193,6 +210,11 @@ async def ws_search(websocket: WebSocket) -> None:
 @router.get("/index/coverage")
 async def index_coverage() -> JSONResponse:
     try:
+        if use_remote_modal():
+            from engines.cloud_modal import CloudModalEngine
+            cov = await asyncio.to_thread(CloudModalEngine().get_index_coverage)
+            return JSONResponse(content=cov)
+
         _, metadata = load_or_build_index()
         lats = metadata["lats"]
         lons = metadata["lons"]

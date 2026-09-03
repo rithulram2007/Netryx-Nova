@@ -1,7 +1,10 @@
 import math
 
 import numpy as np
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None  # type: ignore[assignment]
 from PIL import Image
 
 
@@ -68,9 +71,12 @@ def generate_circle_points(
     return points
 
 
+from typing import Any
+
+
 def get_projection_base_dirs(
-    fov_deg: float, out_hw: tuple[int, int], device: torch.device | None = None
-) -> torch.Tensor:
+    fov_deg: float, out_hw: tuple[int, int], device: Any = None
+) -> Any:
     if device is None:
         has_mps = torch.backends.mps.is_available()
         device = torch.device("cuda" if torch.cuda.is_available() else "mps" if has_mps else "cpu")
@@ -92,13 +98,13 @@ def get_projection_base_dirs(
 
 
 def equirectangular_to_rectilinear_torch(
-    pano_tensor: torch.Tensor,
+    pano_tensor: Any,
     fov_deg: float = 90,
     out_hw: tuple[int, int] = (400, 400),
-    yaw_deg: float | list[float] | torch.Tensor = 0,
+    yaw_deg: Any = 0,
     pitch_deg: float = 0,
-    base_dirs: torch.Tensor | None = None,
-) -> torch.Tensor:
+    base_dirs: Any = None,
+) -> Any:
     device = pano_tensor.device
     _, _, h, w = pano_tensor.shape
     out_h, out_w = out_hw
@@ -167,7 +173,7 @@ def equirectangular_to_rectilinear(
     return Image.fromarray(out_t)
 
 
-def pil_to_tensor(pil_img: Image.Image, device: torch.device | str | None = None) -> torch.Tensor:
+def pil_to_tensor(pil_img: Image.Image, device: Any = None) -> Any:
     if device is None:
         has_mps = torch.backends.mps.is_available()
         device = torch.device("cuda" if torch.cuda.is_available() else "mps" if has_mps else "cpu")
@@ -177,7 +183,7 @@ def pil_to_tensor(pil_img: Image.Image, device: torch.device | str | None = None
     )
 
 
-def tensor_to_pil(t: torch.Tensor) -> Image.Image:
+def tensor_to_pil(t: Any) -> Image.Image:
     arr = (
         t.squeeze(0).cpu().clamp(0, 1).mul(255).add_(0.5)
         .to(torch.uint8).permute(1, 2, 0).numpy()

@@ -1,9 +1,10 @@
 import logging
+import os
 from typing import Any
 
 import numpy as np
 
-from config import COMPACT_INDEX_DIR, RETRIEVAL_TOP_K, USE_FAISS
+from config import COMPACT_INDEX_DIR, MODAL_WORKER_URL, RETRIEVAL_TOP_K, USE_FAISS
 from core.exceptions import IndexNotFoundError
 from utils.netryx_loader import build_faiss_index, load_compact_index
 
@@ -15,12 +16,34 @@ _index_dir_loaded: str | None = None
 _use_faiss: bool = USE_FAISS
 
 
+def use_remote_modal() -> bool:
+    _on_render = os.environ.get("RENDER", "").lower() in ("true", "1")
+    _explicit_remote = os.environ.get("USE_REMOTE_MODAL", "").lower() in ("true", "1")
+    return _on_render or _explicit_remote
+
+
 def load_or_build_index(
     index_dir: str | None = None,
     use_faiss: bool = USE_FAISS,
     force_reload: bool = False,
 ) -> tuple[Any, dict[str, Any]]:
     global _index_instance, _metadata_instance, _index_dir_loaded, _use_faiss
+
+    if use_remote_modal():
+        from engines.cloud_modal import CloudModalEngine
+        info = CloudModalEngine().get_index_info()
+        if not info.get("loaded"):
+            raise IndexNotFoundError("Remote Modal index not loaded. Download or load an index first.")
+        lats = np.zeros(info.get("entries", 0), dtype=np.float32)
+        lons = np.zeros(info.get("entries", 0), dtype=np.float32)
+        dummy_meta = {
+            "lats": lats,
+            "lons": lons,
+            "panoids": np.array([]),
+            "paths": np.array([]),
+            "headings": np.array([]),
+        }
+        return None, dummy_meta
 
     target_dir = index_dir or COMPACT_INDEX_DIR
 
@@ -66,6 +89,15 @@ def search_index(
     top_k: int = RETRIEVAL_TOP_K,
     index_dir: str | None = None,
 ) -> list[dict[str, Any]]:
+    if use_remote_modal():
+        from engines.cloud_modal import CloudModalEngine
+        engine = CloudModalEngine()
+        return engine.search_index(
+            query_np=query_desc,
+            center=center,
+            radius_km=radius_km,
+            top_k=top_k,
+        )
     index, metadata = load_or_build_index(index_dir=index_dir)
 
     lat1 = np.radians(center[0])

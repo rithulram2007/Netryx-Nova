@@ -2,8 +2,12 @@ import gc
 import logging
 import threading
 from collections.abc import Callable
+from typing import Any
 
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None  # type: ignore[assignment]
 from PIL import Image
 
 from config import MATCHING_TOP_K
@@ -17,11 +21,14 @@ log = logging.getLogger("netryx.engine.cpu")
 
 class LocalCPUEngine(EngineBase):
     def __init__(self) -> None:
-        self._device = torch.device("cpu")
+        if torch is not None:
+            self._device = torch.device("cpu")
+        else:
+            self._device = "cpu"  # type: ignore[assignment]
         log.info("CPU engine initialized")
 
     @property
-    def device(self) -> torch.device:
+    def device(self) -> Any:
         return self._device
 
     def run_stage2(

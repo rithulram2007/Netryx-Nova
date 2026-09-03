@@ -1,7 +1,11 @@
 import os
 import sys
-import torch
-from torch.amp import autocast
+try:
+    import torch
+    from torch.amp import autocast
+except ImportError:
+    torch = None  # type: ignore[assignment]
+    autocast = None  # type: ignore[assignment]
 import numpy as np
 from PIL import Image
 
@@ -56,7 +60,9 @@ except Exception as e:
 
 
 _mast3r_model = None
-device = 'mps' if torch.backends.mps.is_available() else ('cuda' if torch.cuda.is_available() else 'cpu')
+has_mps = torch is not None and hasattr(torch, "backends") and hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
+has_cuda = torch is not None and hasattr(torch, "cuda") and torch.cuda.is_available()
+device = 'mps' if has_mps else ('cuda' if has_cuda else 'cpu')
 
 def get_mast3r_model():
     """Load MASt3R model. Cached after first call."""
